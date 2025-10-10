@@ -6,16 +6,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class NotificationDispatcherService {
+public class NotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public NotificationDispatcherService(SimpMessagingTemplate messagingTemplate) {
+    public NotificationService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void send(String destination, String eventType, Object payload) {
+    public void send(String userId, String destination, String eventType, Object payload) {
         log.info("Sending {} message to {} with : {}", eventType, destination, payload);
-        messagingTemplate.convertAndSend(destination, payload);
+        messagingTemplate.convertAndSendToUser(userId, destination, payload);
     }
 }
