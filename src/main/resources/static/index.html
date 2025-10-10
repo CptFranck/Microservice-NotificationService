@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Notification Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>🎟️ Booking Client Demo</h2>
+
+<div>
+    <label>User ID: <input type="number" id="userId" value="1"></label><br><br>
+    <label>Event ID: <input type="number" id="eventId" value="1"></label><br><br>
+    <label>Tickets: <input type="number" id="ticketCount" value="10"></label><br><br>
+
+    <button onclick="connect()">Connect to WebSocket</button>
+    <button onclick="createBooking()">Create Booking</button>
+</div>
+
+<hr>
+
+<div id="messages">
+    <h3>📡 Received Events:</h3>
+    <ul id="eventList"></ul>
+</div>
+
+<script>
+    let stompClient = null;
+    let userId = null;
+
+    function connect() {
+        userId = document.getElementById("userId").value;
+        const socket = new SockJS("http://localhost:8085/ws-notification"); // 👉 ton endpoint WebSocket
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, () => {
+            console.log("✅ Connected as user", userId);
+
+            // 👇 L'utilisateur s'abonne à son canal personnel
+            stompClient.subscribe(`/user/${userId}/queue/bookings`, (message) => {
+                const event = JSON.parse(message.body);
+                console.log("📨 Booking event received:", event);
+                showEvent(event);
+            });
+        });
+    }
+
+    function createBooking() {
+        const booking = {
+            userId: Number(document.getElementById("userId").value),
+            eventId: Number(document.getElementById("eventId").value),
+            ticketCount: Number(document.getElementById("ticketCount").value)
+        };
+
+        fetch("http://localhost:8081/api/v1/booking", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(booking)
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log("🎫 Booking created:", data);
+            })
+            .catch(err => console.error("❌ Error creating booking:", err));
+    }
+
+    function showEvent(event) {
+        const li = document.createElement("li");
+        li.textContent = `Booking updated for event ${event.eventId} - tickets: ${event.ticketCount}`;
+        document.getElementById("eventList").appendChild(li);
+    }
+</script>
+</body>
+</html>
