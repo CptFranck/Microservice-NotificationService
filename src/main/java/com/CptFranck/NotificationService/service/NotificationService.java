@@ -15,7 +15,6 @@ public class NotificationService {
     }
 
     public void send(String userId, String destination, String eventType, Object payload) {
-        log.info("Sending {} message to {} with : {}", eventType, destination, payload);
         messagingTemplate.convertAndSendToUser(userId, destination, payload);
     }
 }
