@@ -66,8 +66,22 @@
     }
 
     function showEvent(event) {
+        // Filtrer par utilisateur courant
         const li = document.createElement("li");
-        li.textContent = `Booking updated for event ${event.eventId} - tickets: ${event.ticketCount}`;
+        let text = "";
+
+        if (event.totalPrice !== undefined) {
+            // C'est un BookingConfirmed
+            text = `✅ Booking confirmed for Event ${event.eventId} - Tickets: ${event.ticketCount} - Total: $${event.totalPrice}`;
+        } else if (event.reason !== undefined) {
+            // C'est un BookingRejected
+            text = `❌ Booking rejected for Event ${event.eventId} - Tickets: ${event.ticketCount} - Reason: ${event.reason}`;
+        } else {
+            // Sinon c'est un BookingEvent classique
+            text = `🎫 Booking updated for Event ${event.eventId} - Tickets: ${event.ticketCount}`;
+        }
+
+        li.textContent = text;
         document.getElementById("eventList").appendChild(li);
     }
 </script>
