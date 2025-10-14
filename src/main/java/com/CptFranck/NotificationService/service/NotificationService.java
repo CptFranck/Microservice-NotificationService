@@ -14,7 +14,7 @@ public class NotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void send(String userId, String destination, String eventType, Object payload) {
-        messagingTemplate.convertAndSendToUser(userId, destination, payload);
+    public void sendToUserBooking(String userId, Object payload) {
+        messagingTemplate.convertAndSendToUser(userId, "/bookings", payload);
     }
 }
