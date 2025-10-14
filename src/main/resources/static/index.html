@@ -31,14 +31,13 @@
 
     function connect() {
         userId = document.getElementById("userId").value;
-        const socket = new SockJS("http://localhost:8085/ws-notification"); // 👉 ton endpoint WebSocket
+        const socket = new SockJS("http://localhost:8085/ws-notification");
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, () => {
             console.log("✅ Connected as user", userId);
 
-            // 👇 L'utilisateur s'abonne à son canal personnel
-            stompClient.subscribe(`/user/${userId}/queue/bookings`, (message) => {
+            stompClient.subscribe(`/user/${userId}/bookings`, (message) => {
                 const event = JSON.parse(message.body);
                 console.log("📨 Booking event received:", event);
                 showEvent(event);
@@ -66,18 +65,14 @@
     }
 
     function showEvent(event) {
-        // Filtrer par utilisateur courant
         const li = document.createElement("li");
         let text = "";
 
         if (event.totalPrice !== undefined) {
-            // C'est un BookingConfirmed
             text = `✅ Booking confirmed for Event ${event.eventId} - Tickets: ${event.ticketCount} - Total: $${event.totalPrice}`;
         } else if (event.reason !== undefined) {
-            // C'est un BookingRejected
             text = `❌ Booking rejected for Event ${event.eventId} - Tickets: ${event.ticketCount} - Reason: ${event.reason}`;
         } else {
-            // Sinon c'est un BookingEvent classique
             text = `🎫 Booking updated for Event ${event.eventId} - Tickets: ${event.ticketCount}`;
         }
 
