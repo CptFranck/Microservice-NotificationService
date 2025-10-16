@@ -29,7 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-notification")
-                .setAllowedOriginPatterns("http://localhost:63342")
+                .setAllowedOriginPatterns("http://localhost:63342", "http://localhost:8090")
                 .withSockJS();
     }
 
