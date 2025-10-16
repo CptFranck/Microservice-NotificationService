@@ -31,7 +31,8 @@
 
     function connect() {
         userId = document.getElementById("userId").value;
-        const socket = new SockJS("http://localhost:8085/ws-notification");
+        // const socket = new SockJS("http://localhost:8085/ws-notification");
+        const socket = new SockJS("http://localhost:8090/ws-notification");
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, () => {
