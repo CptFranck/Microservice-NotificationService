@@ -7,12 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
+
+<button id="loginBtn">Login with OAuth2</button>
+
 <h2>🎟️ Booking Client Demo</h2>
 
 <div>
     <label>User ID: <input type="number" id="userId" value="1"></label><br><br>
     <label>Event ID: <input type="number" id="eventId" value="1"></label><br><br>
-    <label>Tickets: <input type="number" id="ticketCount" value="10"></label><br><br>
+    <label>Tickets: <input type="number" id="ticketCount" value="100"></label><br><br>
 
     <button onclick="connect()">Connect to WebSocket</button>
     <button onclick="createBooking()">Create Booking</button>
@@ -26,16 +29,20 @@
 </div>
 
 <script>
-    let stompClient = null;
     let userId = null;
+    let accessToken = null;
 
     function connect() {
         userId = document.getElementById("userId").value;
+        accessToken = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiLVlTOFBBZHdsblZuQlhNaWJQQjZRVEdFcHhxb3V0RXRqT0tucGNERmhJIn0.eyJleHAiOjE3NjA2OTg1ODQsImlhdCI6MTc2MDY5ODI4NCwianRpIjoiMjI4NzNjNDctZDYwYy00MWQ0LWFhZDktNWU3OTk1MTViZGNmIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDkxL3JlYWxtcy90aWNrZXRpbmctc2VjdXJpdHktcmVhbG0iLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMTc5ZGQ2ZjMtNTY0Zi00NGRjLThiNWEtZjUwMzUwZGVmOGViIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoidGlja2V0aW5nLWNsaWVudC1pZCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy10aWNrZXRpbmctc2VjdXJpdHktcmVhbG0iLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIGVtYWlsIHByb2ZpbGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxNzIuMTkuMC4xIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LXRpY2tldGluZy1jbGllbnQtaWQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE5LjAuMSIsImNsaWVudF9pZCI6InRpY2tldGluZy1jbGllbnQtaWQifQ.Z19Qb6gzJEyIeU4QwvHpEGXVX6yaaauePYNwUMrwwyDqk39EGUwVsjW5h71We8FvxOKcXaLfHgPxvglyqIPclCp1wUAV1gtVyoAxYWUme8kdfbZ2OP_WN8YMaqrPODCmTcBRJKHdx6-ObhBvSO-SYJ5nRKYT3z_Bznvj0EeOFLforu0BVkZ7yHVgn0zgtkP7oCJaFeJyP8H1X9BcmE0618P1uSPtCE3iiH46G4X3ONLh65xKsYg55958RZVOlQsszbK1XSfFxN8w4IPXO6USu0ypWHgu1143Va7OSFUVo_sbG2k4u9TS0NLCZZcuFFYoBuHX9Yh2ypLg7gbPFzpnRg";
         // const socket = new SockJS("http://localhost:8085/ws-notification");
         const socket = new SockJS("http://localhost:8090/ws-notification");
         stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, () => {
+        stompClient.connect({
+            Authorization: `Bearer ${accessToken}`
+        },
+            () => {
             console.log("✅ Connected as user", userId);
 
             stompClient.subscribe(`/user/${userId}/bookings`, (message) => {
@@ -43,7 +50,43 @@
                 console.log("📨 Booking event received:", event);
                 showEvent(event);
             });
+        },
+            (error) => {
+            console.error("❌ STOMP connection error:", error);
         });
+
+        // let stompClient = null;
+        // let keycloak = null;
+        //
+        // // Configuration Keycloak
+        // function initKeycloak() {
+        //     keycloak = new Keycloak({
+        //         url: "http://localhost:8091", // URL du conteneur Keycloak
+        //         realm: "ticketing-security-realm", // Ton realm
+        //         clientId: "ticketing-client-id"    // Ton client front (public)
+        //     });
+        //
+        //     keycloak.init({ onLoad: 'login-required' })
+        //         .then(authenticated => {
+        //             if (authenticated) {
+        //                 console.log("✅ Authenticated:", keycloak.token);
+        //                 connectWebSocket(); // lance la connexion WS
+        //             } else {
+        //                 console.warn("❌ Not authenticated");
+        //             }
+        //
+        //             // Rafraîchir le token avant expiration
+        //             setInterval(() => {
+        //                 keycloak.updateToken(60).then(refreshed => {
+        //                     if (refreshed) console.log("🔄 Token refreshed");
+        //                 }).catch(() => {
+        //                     console.warn("❌ Token refresh failed, logging out");
+        //                     keycloak.logout();
+        //                 });
+        //             }, 30000);
+        //         })
+        //         .catch(console.error);
+        // }
     }
 
     function createBooking() {
