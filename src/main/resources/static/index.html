@@ -35,19 +35,11 @@
                 <button onclick="isLogged()" class="btn btn-info text-white">Is Logged In</button>
                 <button onclick="accessToken()" class="btn btn-warning">Access Token</button>
                 <button onclick="showToken()" class="btn btn-dark">Show Parsed Token</button>
-                <button class="btn btn-success">Call API</button>
             </div>
 
             <label for="output">Output :</label>
             <textarea id="output" class="form-control" rows="5" placeholder="Output will be displayed here..."></textarea>
         </div>
-    </div>
-
-    <!-- SECTION: OAuth -->
-    <div class="text-center mb-5">
-        <button onclick="initKeycloak()" class="btn btn-outline-primary btn-lg">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Login with OAuth2
-        </button>
     </div>
 
     <!-- SECTION: Booking -->
@@ -71,6 +63,10 @@
             </form>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
+                <button id="toggleModeBtn" onclick="toggleWebSocketMode()" class="btn btn-danger" type="button">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Mode actuel : <span id="modeLabel">WebSocket direct</span>
+                </button>
                 <button onclick="connectWebSocket()" class="btn btn-primary">
                     <i class="bi bi-plug"></i> Connect WebSocket
                 </button>
@@ -91,11 +87,13 @@
 </div>
 
 <script>
+
     const keycloak = new Keycloak({
         url: "http://localhost:8091",
         realm: "ticketing-security-realm",
         clientId: "ticketing-client-id",
     });
+
     const outputTextarea = document.getElementById('output');;
     initKeycloak()
 
@@ -144,6 +142,7 @@
             alert(notLoggedInMessage);
         }
     }
+
     function showToken(){
         if (keycloak.authenticated) {
             const parsedToken = keycloak.tokenParsed;
@@ -166,13 +165,34 @@
         //         //     });
         //         // }, 30000);
 
-    let userId = null;
     let token = null;
+    let userId = null;
+    let useGateway = false;
+
+    const modeLabel = document.getElementById("modeLabel");
+    const toggleBtn = document.getElementById("toggleModeBtn");
+
+    function toggleWebSocketMode(){
+        useGateway = !useGateway;
+        if (useGateway) {
+            modeLabel.textContent = "API Gateway";
+            toggleBtn.classList.remove("btn-danger");
+            toggleBtn.classList.add("btn-success");
+        } else {
+            modeLabel.textContent = "WebSocket direct";
+            toggleBtn.classList.remove("btn-success");
+            toggleBtn.classList.add("btn-danger");
+        }
+    }
+
+    let socket = null
 
     function connectWebSocket() {
         userId = document.getElementById("userId").value;
-        // const socket = new SockJS("http://localhost:8085/ws-notification");
-        const socket = new SockJS("http://localhost:8090/ws-notification");
+        if(useGateway)
+            socket = new SockJS("http://localhost:8090/ws-notification");
+        else
+            socket = new SockJS("http://localhost:8085/ws-notification");
         stompClient = Stomp.over(socket);
 
         stompClient.connect({
@@ -190,7 +210,6 @@
             (error) => {
             console.error("❌ STOMP connection error:", error);
         });
-
     }
 
     function createBooking() {
