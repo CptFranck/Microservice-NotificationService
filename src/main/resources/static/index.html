@@ -37,8 +37,48 @@
                 <button onclick="showToken()" class="btn btn-dark">Show Parsed Token</button>
             </div>
 
-            <label for="output">Output :</label>
-            <textarea id="output" class="form-control" rows="5" placeholder="Output will be displayed here..."></textarea>
+            <label for="output">Output </label>
+            <textarea id="output" class="form-control" rows="2" placeholder="Output will be displayed here..."></textarea>
+        </div>
+    </div>
+
+    <!-- Bouton simple de connexion -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h5 class="card-title mb-3">🔗 Connection Control</h5>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button id="toggleModeBtn" onclick="toggleWebSocketMode()" class="btn btn-danger" type="button">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Mode actuel : <span id="modeLabel">WebSocket direct</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION: Inventory GET Test -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h2 class="card-title mb-4">📦 Inventory API Test</h2>
+
+            <div class="mb-3">
+                <label for="venueId" class="form-label">Venue ID</label>
+                <input type="number" id="venueId" class="form-control" value="1">
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button onclick="callApi()" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat me-1"></i> Call API
+                </button>
+                <button onclick="clearApiOutput()" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Response</label>
+                <label for="apiOutput"></label><textarea id="apiOutput" class="form-control" rows="2" readonly></textarea>
+            </div>
         </div>
     </div>
 
@@ -63,10 +103,6 @@
             </form>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
-                <button id="toggleModeBtn" onclick="toggleWebSocketMode()" class="btn btn-danger" type="button">
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                    Mode actuel : <span id="modeLabel">WebSocket direct</span>
-                </button>
                 <button onclick="connectWebSocket()" class="btn btn-primary">
                     <i class="bi bi-plug"></i> Connect WebSocket
                 </button>
@@ -169,8 +205,44 @@
     let userId = null;
     let useGateway = false;
 
+    const API_BASE = 'http://localhost:8085';
+    const API_GATEWAY = 'http://localhost:8091';
+
+
     const modeLabel = document.getElementById("modeLabel");
     const toggleBtn = document.getElementById("toggleModeBtn");
+
+    const output = document.getElementById('apiOutput');
+
+    async function callApi() {
+        const venueId = document.getElementById('venueId').value || 1;
+        const url = `${API_BASE}/api/v1/inventory/venue/${venueId}`;
+
+        logToTextarea(`🔍 Calling: ${url}`)
+
+        try {
+            const res = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': 'Bearer ' + keycloak.token,
+                }
+            });
+
+            if (!res.ok) {
+                output.value += `❌ HTTP ${res.status}: ${res.statusText}\n`;
+                return;
+            }
+
+            const data = await res.json();
+            output.value += `✅ Response:\n${JSON.stringify(data, null, 2)}\n`;
+        } catch (err) {
+            output.value += `🚨 Error: ${err.message}\n`;
+        }
+    }
+
+    function clearApiOutput(){
+        output.value = '';
+    }
 
     function toggleWebSocketMode(){
         useGateway = !useGateway;
@@ -185,14 +257,14 @@
         }
     }
 
-    let socket = null
+    let socket = null;
+    let address = null;
 
     function connectWebSocket() {
         userId = document.getElementById("userId").value;
-        if(useGateway)
-            socket = new SockJS("http://localhost:8090/ws-notification");
-        else
-            socket = new SockJS("http://localhost:8085/ws-notification");
+        if(useGateway) address = API_BASE;
+        else address = API_GATEWAY;
+        socket = new SockJS(`${API_BASE}/ws-notification`);
         stompClient = Stomp.over(socket);
 
         stompClient.connect({
