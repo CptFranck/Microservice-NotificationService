@@ -119,6 +119,43 @@
         });
     }
 
+    function login(){
+        logToTextarea('Login button clicked');
+        keycloak.login();
+    }
+    function logout(){
+        logToTextarea('Logout button clicked');
+        keycloak.logout();
+    }
+
+    function isLogged(){
+        const isLoggedInMessage = keycloak.authenticated ? 'User is logged in' : 'User is not logged in';
+        logToTextarea('Is Logged In button clicked: ' + isLoggedInMessage);
+        alert(isLoggedInMessage);
+    }
+
+    function accessToken(){
+        if (keycloak.authenticated) {
+            logToTextarea('Access Token button clicked: ' + keycloak.token);
+            alert('Access Token: ' + keycloak.token);
+        } else {
+            const notLoggedInMessage = 'User is not logged in';
+            logToTextarea('Access Token button clicked: ' + notLoggedInMessage);
+            alert(notLoggedInMessage);
+        }
+    }
+    function showToken(){
+        if (keycloak.authenticated) {
+            const parsedToken = keycloak.tokenParsed;
+            logToTextarea('Show Parsed Access Token button clicked: ' + JSON.stringify(parsedToken, null, 2));
+            alert('Parsed Access Token: ' + JSON.stringify(parsedToken, null, 2));
+        } else {
+            const notLoggedInMessage = 'User is not logged in';
+            logToTextarea('Show Parsed Access Token button clicked: ' + notLoggedInMessage);
+            alert(notLoggedInMessage);
+        }
+    }
+
         // http://localhost:8091/realms/ticketing-security-realm/protocol/openid-connect/token
         //         // setInterval(() => {
         //         //     keycloak.updateToken(60).then(refreshed => {
