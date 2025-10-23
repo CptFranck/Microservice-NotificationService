@@ -204,15 +204,25 @@
     let token = null;
     let userId = null;
     let address = null;
-    let useGateway = false;
+    let useGateway = true;
+
+    const modeLabel = document.getElementById("modeLabel");
+    const toggleBtn = document.getElementById("toggleModeBtn");
+
+    if (useGateway) {
+        modeLabel.textContent = "API Gateway";
+        toggleBtn.classList.remove("btn-danger");
+        toggleBtn.classList.add("btn-success");
+    } else {
+        modeLabel.textContent = "WebSocket direct";
+        toggleBtn.classList.remove("btn-success");
+        toggleBtn.classList.add("btn-danger");
+    }
 
     const API_GATEWAY = 'http://localhost:8090';
     const API_BOOKING_SERVICE = 'http://localhost:8081';
     const API_INVENTORY_SERVICE = 'http://localhost:8080';
     const API_NOTIFICATION_SERVICE = 'http://localhost:8085';
-
-    const modeLabel = document.getElementById("modeLabel");
-    const toggleBtn = document.getElementById("toggleModeBtn");
 
     function toggleApiGateWayUse(){
         useGateway = !useGateway;
@@ -241,7 +251,7 @@
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
-                // 'Authorization': 'Bearer ' + keycloak.token,
+                'Authorization': 'Bearer ' + keycloak.token,
             }
         })
             .then(res => res.json())
