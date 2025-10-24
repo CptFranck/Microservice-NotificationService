@@ -68,9 +68,9 @@
 
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <button onclick="inventoryByVenueId()" class="btn btn-primary">
-                    <i class="bi bi-arrow-repeat me-1"></i> Call API
+                    <i class="bi bi-arrow-repeat me-1"></i> Get Inventory By Venue Id
                 </button>
-                <button onclick="clearApiOutput()" class="btn btn-outline-secondary">
+                <button onclick="clearInventoryServiceApiOutput()" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-1"></i> Clear
                 </button>
             </div>
@@ -82,12 +82,12 @@
         </div>
     </div>
 
-    <!-- SECTION: Booking -->
+    <!-- SECTION: Booking POST TEST -->
     <div class="card shadow-sm mb-4 border-0">
         <div class="card-body">
             <h2 class="card-title mb-4">🎟️ Booking Client Demo</h2>
 
-            <form class="row g-3">
+            <form class="row mb-3">
                 <div class="col-md-4">
                     <label for="userId" class="form-label">User ID</label>
                     <input type="number" id="userId" class="form-control" value="1">
@@ -102,13 +102,17 @@
                 </div>
             </form>
 
-            <div class="mt-4 d-flex flex-wrap gap-2">
-                <button onclick="connectWebSocket()" class="btn btn-primary">
-                    <i class="bi bi-plug"></i> Connect WebSocket
-                </button>
-                <button onclick="createBooking()" class="btn btn-success">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button onclick="createBooking()" class="btn btn-primary">
                     <i class="bi bi-ticket-perforated"></i> Create Booking
                 </button>
+                <button onclick="clearBookingServiceApiOutput()" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Response</label>
+                <pre id="bookingApiOutput" class="form-control" style="height:auto; min-height:50px; overflow:auto;"></pre>
             </div>
         </div>
     </div>
@@ -117,7 +121,15 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <h3 class="card-title mb-3">📡 Received Events</h3>
-            <ul id="eventList" class="list-group"></ul>
+            <div class="mb-3">
+                <button onclick="connectWebSocket()" class="btn btn-primary">
+                    <i class="bi bi-plug"></i> Connect WebSocket
+                </button>
+            </div>
+            <div class="mb-3">
+                <ul id="eventList" class="list-group"></ul>
+            </div>
+
         </div>
     </div>
 </div>
@@ -237,7 +249,8 @@
         }
     }
 
-    const output = document.getElementById('inventoryApiOutput');
+    const inventoryServiceOutput = document.getElementById('inventoryApiOutput');
+    const bookingServiceOutput = document.getElementById('bookingApiOutput');
 
     function inventoryByVenueId() {
         const venueId = document.getElementById('venueId').value || 1;
@@ -255,12 +268,39 @@
             }
         })
             .then(res => res.json())
-            .then(data => output.textContent  = `✅ Response:\n${JSON.stringify(data, null, 2)}\n`)
-            .catch(err => output.textContent  = `🚨 Error: ${err.message}\n`);
+            .then(data => inventoryServiceOutput.textContent  = `✅ Response:\n${JSON.stringify(data, null, 2)}\n`)
+            .catch(err => inventoryServiceOutput.textContent  = `🚨 Error: ${err.message}\n`);
     }
 
-    function clearApiOutput(){
-        output.value = '';
+    function clearInventoryServiceApiOutput(){
+        inventoryServiceOutput.textContent = '';
+    }
+
+        function createBooking() {
+        const booking = {
+            userId: Number(document.getElementById("userId").value),
+            eventId: Number(document.getElementById("eventId").value),
+            ticketCount: Number(document.getElementById("ticketCount").value)
+        };
+
+        if(useGateway) address = API_GATEWAY;
+        else address = API_BOOKING_SERVICE;
+
+        fetch(`${address}/api/v1/booking`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + keycloak.token,
+            },
+            body: JSON.stringify(booking)
+        })
+            .then(res => res.json())
+            .then(data => bookingServiceOutput.textContent  = `✅ Response:\n${JSON.stringify(data, null, 2)}\n`)
+            .catch(err => bookingServiceOutput.textContent  = `🚨 Error: ${err.message}\n`);
+    }
+
+    function clearBookingServiceApiOutput(){
+        bookingServiceOutput.textContent = '';
     }
 
     let socket = null;
@@ -275,42 +315,20 @@
         stompClient = Stomp.over(socket);
 
         stompClient.connect({
-            Authorization: `Bearer ${token}`
-        },
+                Authorization: `Bearer ${token}`
+            },
             () => {
-            console.log("✅ Connected as user", userId);
+                console.log("✅ Connected as user", userId);
 
-            stompClient.subscribe(`/user/${userId}/bookings`, (message) => {
-                const event = JSON.parse(message.body);
-                console.log("📨 Booking event received:", event);
-                showEvent(event);
-            });
-        },
+                stompClient.subscribe(`/user/${userId}/bookings`, (message) => {
+                    const event = JSON.parse(message.body);
+                    console.log("📨 Booking event received:", event);
+                    showEvent(event);
+                });
+            },
             (error) => {
-            console.error("❌ STOMP connection error:", error);
-        });
-    }
-
-    function createBooking() {
-        const booking = {
-            userId: Number(document.getElementById("userId").value),
-            eventId: Number(document.getElementById("eventId").value),
-            ticketCount: Number(document.getElementById("ticketCount").value)
-        };
-
-        if(useGateway) address = API_GATEWAY;
-        else address = API_BOOKING_SERVICE;
-
-        fetch(`${address}/api/v1/booking`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(booking)
-        })
-            .then(res => res.json())
-            .then(data => {
-                console.log("🎫 Booking created:", data);
-            })
-            .catch(err => console.error("❌ Error creating booking:", err));
+                console.error("❌ STOMP connection error:", error);
+            });
     }
 
     function showEvent(event) {
