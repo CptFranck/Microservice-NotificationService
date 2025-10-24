@@ -31,6 +31,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws-notification")
                 .setAllowedOriginPatterns("http://localhost:63342", "http://localhost:8090")
                 .withSockJS();
+        registry.addEndpoint("/ws-notification")
+                .setAllowedOriginPatterns("http://localhost:63342", "http://localhost:8090");
     }
 
     @Override
