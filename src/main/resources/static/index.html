@@ -158,8 +158,8 @@
             // checkLoginIframe: false,
         }).then(authenticated => {
             logToTextarea(authenticated ? 'User is authenticated' : 'User is not authenticated');
-            if (authenticated) console.log("✅ Authenticated:", keycloak.token);
-            else console.warn("❌ Not authenticated");
+            // if (authenticated) console.log("✅ Authenticated:", keycloak.token);
+            // else console.warn("❌ Not authenticated");
         }).catch(err => {
             console.error('Erreur Keycloak', err);
         });
@@ -213,8 +213,6 @@
         //         //     });
         //         // }, 30000);
 
-    let token = null;
-    let userId = null;
     let address = null;
     let useGateway = true;
 
@@ -250,7 +248,6 @@
     }
 
     const inventoryServiceOutput = document.getElementById('inventoryApiOutput');
-    const bookingServiceOutput = document.getElementById('bookingApiOutput');
 
     function inventoryByVenueId() {
         const venueId = document.getElementById('venueId').value || 1;
@@ -276,7 +273,9 @@
         inventoryServiceOutput.textContent = '';
     }
 
-        function createBooking() {
+    const bookingServiceOutput = document.getElementById('bookingApiOutput');
+
+    function createBooking() {
         const booking = {
             userId: Number(document.getElementById("userId").value),
             eventId: Number(document.getElementById("eventId").value),
@@ -303,23 +302,22 @@
         bookingServiceOutput.textContent = '';
     }
 
-    let socket = null;
 
     function connectWebSocket() {
-        userId = document.getElementById("userId").value;
+        const userId = document.getElementById("userId").value;
 
         if(useGateway) address = API_GATEWAY;
         else address = API_NOTIFICATION_SERVICE;
 
-        socket = new SockJS(`${address}/ws-notification`);
-        stompClient = Stomp.over(socket);
+        const socket = new SockJS(`${address}/ws-notification/`);
+        const stompClient = Stomp.over(socket);
+
 
         stompClient.connect({
-                Authorization: `Bearer ${token}`
+                // Authorization: `Bearer ${keycloak.token}`
             },
             () => {
                 console.log("✅ Connected as user", userId);
-
                 stompClient.subscribe(`/user/${userId}/bookings`, (message) => {
                     const event = JSON.parse(message.body);
                     console.log("📨 Booking event received:", event);
