@@ -20,6 +20,11 @@ keycloak:
   auth:
     jwk-set-uri: http://localhost:8091/realms/ticketing-security-realm/protocol/openid-connect/certs
 
+# security config variables
+security:
+  cors:
+    allowed-origins: http://localhost:4200, http://localhost:63342
+
 #logging:
 #  level:
 #    root: debug
