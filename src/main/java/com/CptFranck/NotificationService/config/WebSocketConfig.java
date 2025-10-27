@@ -1,5 +1,6 @@
 package com.CptFranck.NotificationService.config;
 
+import com.CptFranck.NotificationService.config.security.WebSocketAuthInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
