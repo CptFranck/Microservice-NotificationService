@@ -1,6 +1,7 @@
 package com.CptFranck.NotificationService.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
@@ -20,9 +21,13 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    static String[] ALLOWED_ORIGINS;
+
     final private WebSocketAuthInterceptor webSocketAuthInterceptor;
 
-    public WebSocketConfig(WebSocketAuthInterceptor webSocketAuthInterceptor) {
+    public WebSocketConfig(WebSocketAuthInterceptor webSocketAuthInterceptor,
+                           @Value("${security.cors.allowed-origins}") String[] allowedOrigins) {
+        ALLOWED_ORIGINS = allowedOrigins;
         this.webSocketAuthInterceptor = webSocketAuthInterceptor;
     }
 
@@ -36,10 +41,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-notification")
-                .setAllowedOriginPatterns("http://localhost:63342", "http://localhost:8090")
+                .setAllowedOriginPatterns(ALLOWED_ORIGINS)
                 .withSockJS();
-        registry.addEndpoint("/ws-notification")
-                .setAllowedOriginPatterns("http://localhost:63342", "http://localhost:8090");
     }
 
     @Override
