@@ -43,8 +43,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             } else {
                 accessor.setUser(null);
             }
-        } else {
-            throw new IllegalArgumentException("Missing or invalid Authorization header");
         }
         return message;
     }
