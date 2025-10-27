@@ -15,6 +15,11 @@ spring:
 server:
   port: 8085
 
+# Keycloak variable
+keycloak:
+  auth:
+    jwk-set-uri: http://localhost:8091/realms/ticketing-security-realm/protocol/openid-connect/certs
+
 #logging:
 #  level:
 #    root: debug
