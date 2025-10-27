@@ -309,12 +309,12 @@
         if(useGateway) address = API_GATEWAY;
         else address = API_NOTIFICATION_SERVICE;
 
-        const socket = new SockJS(`${address}/ws-notification/`);
+        const socket = new SockJS(`${address}/ws-notification/`, null, { transports: ['websocket'] });
         const stompClient = Stomp.over(socket);
 
 
         stompClient.connect({
-                // Authorization: `Bearer ${keycloak.token}`
+                Authorization: `Bearer ${keycloak.token}`
             },
             () => {
                 console.log("✅ Connected as user", userId);
