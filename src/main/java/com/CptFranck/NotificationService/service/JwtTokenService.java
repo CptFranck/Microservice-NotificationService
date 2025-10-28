@@ -21,8 +21,8 @@ public class JwtTokenService {
     private final String principalAttribute;
 
     public JwtTokenService(@Value("${keycloak.auth.jwk-set-uri}") String jwkSetUri,
-                           @Value("${keycloak.auth.converter.ressource-id}") String ressourceId_,
-                           @Value("${keycloak.auth.converter.principal-attribute}") String principalAttribute_) {
+                           @Value("${keycloak.auth.token.ressource-id}") String ressourceId_,
+                           @Value("${keycloak.auth.token.principal-attribute}") String principalAttribute_) {
         this.resourceId = ressourceId_;
         this.principalAttribute = principalAttribute_;
         this.jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();

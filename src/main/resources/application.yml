@@ -18,7 +18,10 @@ server:
 # Keycloak variable
 keycloak:
   auth:
-    jwk-set-uri: http://localhost:8091/realms/ticketing-security-realm/protocol/openid-connect/certs
+    token:
+      ressource-id: ticketing-security-realm
+      principal-attribute: preferred_username
+    jwk-set-uri: http://localhost:8091/realms/${keycloak.auth.converter.ressource-id}/protocol/openid-connect/certs
 
 # security config variables
 security:
