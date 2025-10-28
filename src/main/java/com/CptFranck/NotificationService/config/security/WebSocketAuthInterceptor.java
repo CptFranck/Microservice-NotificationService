@@ -1,6 +1,7 @@
 package com.CptFranck.NotificationService.config.security;
 
 import com.CptFranck.NotificationService.service.JwtTokenService;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -26,47 +27,53 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     }
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = getAccessor(message, StompHeaderAccessor.class);
 
         if(accessor == null)
             throw new MessagingException("No StompHeaderAccessor found");
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            authenticateStompUser(accessor);
 
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-
-                String token = authHeader.substring(7);
-                try {
-                    Authentication authentication = jwtTokenService.parseToken(token);
-                    accessor.setUser(authentication);
-                } catch (Exception e) {
-                    log.error("Invalid token", e);
-                    accessor.setUser(null);
-                    throw new IllegalArgumentException("Invalid or expired token", e);
-                }
-            } else {
-                accessor.setUser(null);
-            }
         } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-            log.info("test");
-
-            Principal user = accessor.getUser();
-            String dest = accessor.getDestination();
-
-            if(dest == null || user == null)
-                throw new MessagingException("No Destination found or User not found");
-
-            if (dest.startsWith("/user/") && !dest.contains(user.getName())) {
-                log.error("Wrong user trying to subscribe");
-                try {
-                    throw new IllegalAccessException("Access denied");
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            checkUserSubscription(accessor);
         }
         return message;
+    }
+
+    private void authenticateStompUser(StompHeaderAccessor accessor){
+        String authHeader = accessor.getFirstNativeHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+
+            String token = authHeader.substring(7);
+            try {
+                Authentication authentication = jwtTokenService.parseToken(token);
+                accessor.setUser(authentication);
+            } catch (Exception e) {
+                accessor.setUser(null);
+                log.error("Invalid token", e);
+                throw new IllegalArgumentException("Invalid or expired token", e);
+            }
+        } else {
+            accessor.setUser(null);
+        }
+    }
+
+    private void checkUserSubscription(StompHeaderAccessor accessor){
+        Principal user = accessor.getUser();
+        String dest = accessor.getDestination();
+
+        if(dest == null || user == null)
+            throw new MessagingException("No Destination found or User not found");
+
+        if (dest.startsWith("/user/") && !dest.contains(user.getName())) {
+            log.error("Wrong user trying to subscribe");
+            try {
+                throw new IllegalAccessException("Access denied");
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
