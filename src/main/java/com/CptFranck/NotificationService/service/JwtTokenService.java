@@ -8,9 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,15 +16,15 @@ public class JwtTokenService {
 
     private final JwtDecoder jwtDecoder;
 
-    static private String RESSOURCE_ID;
+    private final String resourceId;
 
-    static private String PRINCIPAL_ATTRIBUTE;
+    private final String principalAttribute;
 
     public JwtTokenService(@Value("${keycloak.auth.jwk-set-uri}") String jwkSetUri,
-                           @Value("${keycloak.auth.converter.ressource-id}") String ressourceId,
-                           @Value("${keycloak.auth.converter.principal-attribute}") String principalAttribute) {
-        RESSOURCE_ID = ressourceId;
-        PRINCIPAL_ATTRIBUTE = principalAttribute;
+                           @Value("${keycloak.auth.converter.ressource-id}") String ressourceId_,
+                           @Value("${keycloak.auth.converter.principal-attribute}") String principalAttribute_) {
+        this.resourceId = ressourceId_;
+        this.principalAttribute = principalAttribute_;
         this.jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
 
@@ -42,11 +40,13 @@ public class JwtTokenService {
         if(jwt.getClaim("resource_access") == null) return Set.of();
 
         Map<String, Object> ressourceAccess = jwt.getClaim("resource_access");
-        if(ressourceAccess.get(RESSOURCE_ID) == null) return Set.of();
+        if(ressourceAccess.get(resourceId) == null) return Set.of();
 
-        Map<String, Object> ressource = (Map<String, Object>) ressourceAccess.get(RESSOURCE_ID);
+        Map<String, Object> ressource = (Map<String, Object>) ressourceAccess.get(resourceId);
 
-        Collection<String> roles = (Collection<String>) ressource.get("roles");
+        Collection<String> roles = Optional.ofNullable((Collection<String>) ressource.get("roles"))
+                .orElse(Collections.emptyList());
+
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toSet());
@@ -54,8 +54,8 @@ public class JwtTokenService {
 
     private String getPrinciplesClaimName(Jwt jwt) {
         String claimName = JwtClaimNames.SUB;
-        if(PRINCIPAL_ATTRIBUTE != null)
-            claimName = PRINCIPAL_ATTRIBUTE;
+        if(principalAttribute != null)
+            claimName = principalAttribute;
         return jwt.getClaimAsString(claimName);
     }
 }
