@@ -20,7 +20,7 @@ import static org.springframework.messaging.support.MessageHeaderAccessor.getAcc
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
-    final private JwtTokenService jwtTokenService;
+    private final JwtTokenService jwtTokenService;
 
     public WebSocketAuthInterceptor(JwtTokenService jwtTokenService) {
         this.jwtTokenService = jwtTokenService;

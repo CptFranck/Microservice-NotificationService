@@ -22,13 +22,13 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    static String[] ALLOWED_ORIGINS;
+    private final String[] allowedOrigins;
 
-    final private WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private final WebSocketAuthInterceptor webSocketAuthInterceptor;
 
     public WebSocketConfig(WebSocketAuthInterceptor webSocketAuthInterceptor,
                            @Value("${security.cors.allowed-origins}") String[] allowedOrigins) {
-        ALLOWED_ORIGINS = allowedOrigins;
+        this.allowedOrigins = allowedOrigins;
         this.webSocketAuthInterceptor = webSocketAuthInterceptor;
     }
 
@@ -42,7 +42,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-notification")
-                .setAllowedOriginPatterns(ALLOWED_ORIGINS)
+                .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS();
     }
 
