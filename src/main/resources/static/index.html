@@ -35,12 +35,7 @@
                 <button onclick="isLogged()" class="btn btn-info text-white">Is Logged In</button>
                 <button onclick="accessToken()" class="btn btn-warning">Access Token</button>
                 <button onclick="showToken()" class="btn btn-dark">Show Parsed Token</button>
-                <a href="http://localhost:8091/realms/ticketing-security-realm/account" class="btn btn-dark">
-                    Account
-                </a>
-                <a href="https://localhost:8091/realms/ticketing-security-realm/account/security/signingin" target="_blank">
-                    Changer mon mot de passe
-                </a>
+                <button id="btnProfil" class="btn btn-dark" >Account</button>
             </div>
 
             <label for="output">Output </label>
@@ -141,6 +136,24 @@
 </div>
 
 <script>
+    document.getElementById("btnProfil").addEventListener("click", openKeycloakAccount);
+    function openKeycloakAccount() {
+        const keycloakBaseUrl = "http://localhost:8091"; // ton serveur Keycloak
+        const realm = "ticketing-security-realm"; // ton realm
+        const clientId = "ticketing-client-id"; // ton client ID dans Keycloak
+        // const frontUrl = window.location.origin;
+        const frontUrl = "http://localhost:63342/MultiServiceProject/src/main/resources/static/index.html";
+
+        // Construit l’URL de la page "Mon compte"
+        const accountUrl =
+            `${keycloakBaseUrl}/realms/${realm}/account` +
+            `?referrer=${encodeURIComponent(clientId)}` +
+            `&referrer_uri=${encodeURIComponent(frontUrl)}`;
+
+        // Ouvre dans un nouvel onglet ou la même fenêtre selon ton besoin
+        window.open(accountUrl, "_blank");
+    }
+
 
     const keycloak = new Keycloak({
         url: "http://localhost:8091",
