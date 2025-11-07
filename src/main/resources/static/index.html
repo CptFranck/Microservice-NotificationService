@@ -35,6 +35,12 @@
                 <button onclick="isLogged()" class="btn btn-info text-white">Is Logged In</button>
                 <button onclick="accessToken()" class="btn btn-warning">Access Token</button>
                 <button onclick="showToken()" class="btn btn-dark">Show Parsed Token</button>
+                <a href="http://localhost:8091/realms/ticketing-security-realm/account" class="btn btn-dark">
+                    Account
+                </a>
+                <a href="https://localhost:8091/realms/ticketing-security-realm/account/security/signingin" target="_blank">
+                    Changer mon mot de passe
+                </a>
             </div>
 
             <label for="output">Output </label>
@@ -89,8 +95,8 @@
 
             <form class="row mb-3">
                 <div class="col-md-4">
-                    <label for="userId" class="form-label">User ID</label>
-                    <input type="number" id="userId" class="form-control" value="1">
+                    <label class="form-label">User ID</label>
+                    <pre id="keycloakUserId" class="form-control" style="height:auto; min-height:50px; overflow:auto;"></pre>
                 </div>
                 <div class="col-md-4">
                     <label for="eventId" class="form-label">Event ID</label>
@@ -143,6 +149,8 @@
     });
 
     const outputTextarea = document.getElementById('output');
+    const keycloakUserIdOutput = document.getElementById('keycloakUserId');
+
     initKeycloak()
 
     function logToTextarea(message) {
@@ -158,8 +166,9 @@
             // checkLoginIframe: false,
         }).then(authenticated => {
             logToTextarea(authenticated ? 'User is authenticated' : 'User is not authenticated');
-            // if (authenticated) console.log("✅ Authenticated:", keycloak.token);
-            // else console.warn("❌ Not authenticated");
+            if (authenticated) console.log("✅ Authenticated:", keycloak.tokenParsed);
+            console.log(keycloak)
+            keycloakUserIdOutput.textContent  = keycloak.idTokenParsed.sid
         }).catch(err => {
             console.error('Erreur Keycloak', err);
         });
@@ -311,7 +320,6 @@
 
         const socket = new SockJS(`${address}/ws-notification/`, null, { transports: ['websocket'] });
         const stompClient = Stomp.over(socket);
-
 
         stompClient.connect({
                 Authorization: `Bearer ${keycloak.token}`
