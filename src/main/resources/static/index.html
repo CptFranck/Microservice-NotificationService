@@ -10,9 +10,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@22.0.3/dist/keycloak.min.js"></script>
-    <!--    &lt;!&ndash;<script src="https://cdn.jsdelivr.net/npm/keycloak-js@21.1.0/dist/keycloak.min.js"></script>&ndash;&gt;-->
-    <!--    &lt;!&ndash;<script src="https://cdn.jsdelivr.net/npm/keycloak-js@26.2.1/lib/keycloak.min.js"></script>&ndash;&gt;-->
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.6/dist/keycloak.min.js"></script>
 
     <!-- ✅ Bootstrap JS (for components, no jQuery needed) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -136,52 +134,55 @@
 </div>
 
 <script>
-    document.getElementById("btnProfil").addEventListener("click", openKeycloakAccount);
-    function openKeycloakAccount() {
-        const keycloakBaseUrl = "http://localhost:8091"; // ton serveur Keycloak
-        const realm = "ticketing-security-realm"; // ton realm
-        const clientId = "ticketing-client-id"; // ton client ID dans Keycloak
-        // const frontUrl = window.location.origin;
-        const frontUrl = "http://localhost:63342/MultiServiceProject/src/main/resources/static/index.html";
 
-        // Construit l’URL de la page "Mon compte"
+    document.getElementById("btnProfil").addEventListener("click", openKeycloakAccount);
+
+    const realm = "ticketing-security-realm";
+    const clientId = "ticketing-client-id";
+    const keycloakBaseUrl = "http://localhost:8091";
+
+    const keycloak = new Keycloak({
+        url: keycloakBaseUrl,
+        realm: realm,
+        clientId: clientId,
+    });
+
+    const outputTextarea = document.getElementById('output');
+    const keycloakUserIdOutput = document.getElementById('keycloakUserId');
+    localStorage.setItem('keycloak.debug', 'true');
+
+    initKeycloak()
+
+    function openKeycloakAccount() {
+        const frontUrl = "http://localhost:63342/MultiServiceProject/src/main/resources/static/index.html";
         const accountUrl =
             `${keycloakBaseUrl}/realms/${realm}/account` +
             `?referrer=${encodeURIComponent(clientId)}` +
             `&referrer_uri=${encodeURIComponent(frontUrl)}`;
 
-        // Ouvre dans un nouvel onglet ou la même fenêtre selon ton besoin
         window.open(accountUrl, "_blank");
     }
-
-
-    const keycloak = new Keycloak({
-        url: "http://localhost:8091",
-        realm: "ticketing-security-realm",
-        clientId: "ticketing-client-id",
-    });
-
-    const outputTextarea = document.getElementById('output');
-    const keycloakUserIdOutput = document.getElementById('keycloakUserId');
-
-    initKeycloak()
 
     function logToTextarea(message) {
         const now = new Date();
         const timestamp = now.toLocaleString();
         outputTextarea.value += `[${timestamp}] ${message}\n`;
     }
-
     function initKeycloak() {
         keycloak.init({
             onLoad: 'check-sso',
-            redirectUri: window.location.href
-            // checkLoginIframe: false,
+            checkLoginIframe: false,
+            // silentCheckSsoRedirectUri: `${location.origin}/silent-check-sso.html`
+            // redirectUri: window.location.href
         }).then(authenticated => {
             logToTextarea(authenticated ? 'User is authenticated' : 'User is not authenticated');
-            if (authenticated) console.log("✅ Authenticated:", keycloak.tokenParsed);
-            console.log(keycloak)
-            keycloakUserIdOutput.textContent  = keycloak.idTokenParsed.sid
+            if (authenticated) {
+                console.log("✅ Authenticated:", keycloak.tokenParsed);
+                keycloakUserIdOutput.textContent = keycloak.idTokenParsed.sid
+            } else {
+                keycloakUserIdOutput.textContent = 'Not logged in';
+                logToTextarea('User is not authenticated');
+            }
         }).catch(err => {
             console.error('Erreur Keycloak', err);
         });
